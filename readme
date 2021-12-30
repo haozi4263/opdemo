@@ -1,3 +1,23 @@
+Operator 可以看成是 CRD 和 Controller 的一种组合特例，Operator 是一种思想，它结合了特定领域知识并通过 CRD 机制扩展了
+Kubernetes API 资源，使用户管理 Kubernetes 的内置资源（Pod、Deployment等）一样创建、配置和管理应用程序，
+Operator 是一个特定的应用程序的控制器，通过扩展 Kubernetes API 资源以代表 Kubernetes 用户创建、配置和管理复杂应用程序的实例，
+通常包含资源模型定义和控制器，通过 `Operator` 通常是为了实现某种特定软件（通常是有状态服务）的自动化运维。
+
+我们完全可以通过上面的方式编写一个 CRD 对象，然后去手动实现一个对应的 Controller 就可以实现一个 Operator，但是我们也发现从头开始
+去构建一个 CRD 控制器并不容易，需要对 Kubernetes 的 API 有深入了解，并且 RBAC 集成、镜像构建、持续集成和部署等都需要很大工作量。
+为了解决这个问题，社区就推出了对应的简单易用的 Operator 框架，比较主流的是
+[kubebuilder](https://github.com/kubernetes-sigs/kubebuilder)和
+[Operator Framework](https://coreos.com/operators)，这两个框架的使用基本上差别不大，
+我们可以根据自己习惯选择一个即可，我们这里先使用`Operator Framework`
+
+
+## Operator Framework
+
+[**Operator Framework**](https://sdk.operatorframework.io)是 CoreOS 开源的一个用于快速开发 Operator 的工具包，该框架包含两个主要的部分：
+
+- Operator SDK: 无需了解复杂的 Kubernetes API 特性，即可让你根据你自己的专业知识构建一个 Operator 应用。
+- Operator Lifecycle Manager（OLM）: 帮助你安装、更新和管理跨集群的运行中的所有 Operator（以及他们的相关服务）
+
 Operator SDK 提供了用于开发 Go、Ansible 以及 Helm 中的 Operator 的工作流，下面的工作流适用于 Golang 的 Operator：
 
 1. 使用 SDK 创建一个新的 Operator 项目
@@ -11,13 +31,40 @@ Operator SDK 提供了用于开发 Go、Ansible 以及 Helm 中的 Operator 的�
 
 
 
-// domain为k8s group使用的 repo用于指定go mode 当前项目mod名称
-operator-sdk init --project-version=2 --domain shimo.im --license apache2 --owner "jude" --repo github.com/haozi4263/opdemo
+项目说明：
+    我们平时在部署一个简单的 Webserver 到 Kubernetes 集群中的时候，都需要先编写一个 Deployment 的控制器，然后创建一个 Service 对象，
+    通过 Pod 的 label 标签进行关联，最后通过 Ingress 或者 type=NodePort 类型的 Service 来暴露服务，每次都需要这样操作，是不是略显麻烦，
+    我们就可以创建一个自定义的资源对象，通过我们的 CRD 来描述我们要部署的应用信息，比如镜像、服务端口、环境变量等等，
+    然后创建我们的自定义类型的资源对象的时候，通过控制器去创建对应的 Deployment 和 Service，是不是就方便很多了，
+    相当于我们用一个资源清单去描述了 Deployment 和 Service 要做的两件事情。
+
+    这里我们将创建一个名为 AppService 的 CRD 资源对象，然后定义如下的资源清单进行应用部署：
+
+    ```yaml
+    apiVersion: app.example.com/v1
+    kind: AppService
+    metadata:
+      name: nginx-app
+    spec:
+      size: 2
+      image: nginx:1.7.9
+      ports:
+        - port: 80
+          targetPort: 80
+          nodePort: 30002
+
+    ```
+
+
+
+初始化：(domain为k8s group使用的 repo用于指定go mode 当前项目mod名称)
+    operator-sdk init --project-version=2 --domain shimo.im --license apache2 --owner "jude" --repo github.com/haozi4263/opdemo
 
 api: crd-->AppService-->Deployment&Servive
     app/v1beta1 kind:MyApp
 
-operator-sdk create api --group app --version v1beta1 --kind MyApp
+创建api:
+    operator-sdk create api --group app --version v1beta1 --kind MyApp
 
 
 
@@ -32,6 +79,5 @@ crd创建： make install
 
 make docker-build IMG=myapp-demo:v1
 make docker-push  IMG=myapp-demo:v1
-make deploy IMG=myapp-demo:v1 部署crontroller到集群中
+make deploy IMG=myapp-demo:v1      部署crontroller到集群中
 
-svc被删除不能自动调谐
