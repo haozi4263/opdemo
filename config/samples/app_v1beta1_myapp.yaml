@@ -1,0 +1,12 @@
+apiVersion: app.shimo.im/v1beta1
+kind: MyApp
+metadata:
+  name: myapp-demo
+spec:
+  # Add fields here
+  size: 3 # 副本数
+  image: nginx:1.7.9
+  ports: # 包含pod和
+  - port: 80
+    targetPort: 80
+    nodePort: 30081

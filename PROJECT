@@ -1,0 +1,7 @@
+domain: shimo.im
+repo: github.com/haozi4263/opdemo
+resources:
+- group: app
+  kind: MyApp
+  version: v1beta1
+version: "2"

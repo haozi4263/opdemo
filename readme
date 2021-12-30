@@ -1,0 +1,37 @@
+Operator SDK 提供了用于开发 Go、Ansible 以及 Helm 中的 Operator 的工作流，下面的工作流适用于 Golang 的 Operator：
+
+1. 使用 SDK 创建一个新的 Operator 项目
+2. 通过添加自定义资源（CRD）定义新的资源 API
+3. 指定使用 SDK API 来 watch 的资源
+4. 定义 Operator 的协调（reconcile）逻辑
+5. 使用 Operator SDK 构建并生成 Operator 部署清单文件
+
+每种 Operator 类型都有不同的功能集，在选择项目的类型时，重要的是要了解每种项目类型的功能和局限性以及 Operator 的用例。
+
+
+
+
+// domain为k8s group使用的 repo用于指定go mode 当前项目mod名称
+operator-sdk init --project-version=2 --domain shimo.im --license apache2 --owner "jude" --repo github.com/haozi4263/opdemo
+
+api: crd-->AppService-->Deployment&Servive
+    app/v1beta1 kind:MyApp
+
+operator-sdk create api --group app --version v1beta1 --kind MyApp
+
+
+
+
+make：重新生成代码
+
+crd创建： make install
+本地controller运行: make run ENABLE_WEBHOOK=false
+创建myApp:
+    kubectl apply -f config/samples/app_v1beta1_myapp.yaml
+
+
+make docker-build IMG=myapp-demo:v1
+make docker-push  IMG=myapp-demo:v1
+make deploy IMG=myapp-demo:v1 部署crontroller到集群中
+
+svc被删除不能自动调谐
