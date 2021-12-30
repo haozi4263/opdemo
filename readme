@@ -88,7 +88,7 @@ make deploy IMG=myapp-demo:v1      部署crontroller到集群中
         日志：DEBUG   controller      Successfully Reconciled {"reconcilerGroup": "app.shimo.im", "reconcilerKind": "MyApp", "controller": "myapp", "name": "myapp-demo", "namespace": "default"}
     2. 创建自定义crd
         kubectl apply -f config/samples/app_v1beta1_myapp.yaml
-        kubectl get pod,deploy,svc                                                                                                                                     [10:47:09]
+        kubectl get pod,deploy,svc
         NAME                             READY   STATUS    RESTARTS   AGE
         pod/myapp-demo-5695c9c66-5zsbl   1/1     Running   0          8s
         pod/myapp-demo-5695c9c66-dj7d6   1/1     Running   0          8s
